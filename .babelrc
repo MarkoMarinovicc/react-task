@@ -1,0 +1,29 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "chrome": "20"
+        },
+        "useBuiltIns": "entry",
+        "corejs": 3,
+        "modules": false
+      }
+    ],
+    [
+      "@babel/preset-react",
+      {
+        "runtime": "automatic"
+      }
+    ],
+    "@babel/preset-typescript"
+  ],
+  "plugins": [
+    "@babel/plugin-transform-arrow-functions",
+    "@babel/plugin-transform-template-literals",
+    "@babel/plugin-transform-classes",
+    "@babel/plugin-proposal-class-properties"
+  ]
+}
+
