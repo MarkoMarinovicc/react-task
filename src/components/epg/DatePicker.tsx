@@ -100,7 +100,7 @@ export default function DatePicker() {
             );
           })}
         </div>
-        {selectedDate && !hasDataForSelectedDate && (
+        {selectedChannel && selectedDate && !hasDataForSelectedDate && (
           <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
             <p className="text-yellow-400 text-sm font-medium mb-1">No Information Available</p>
             <p className="text-yellow-500/80 text-xs">

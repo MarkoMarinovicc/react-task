@@ -21,7 +21,7 @@ export async function fetchEPGData() {
     store.setAvailableDates(parsed.dates);
 
     if (parsed.channels.length > 0 && !store.selectedChannel) {
-      store.setSelectedChannel(parsed.channels[0].id);
+      store.setSelectedDate(parsed.dates[0]);
     }
     if (parsed.dates.length > 0 && !store.selectedDate) {
       store.setSelectedDate(parsed.dates[0]);

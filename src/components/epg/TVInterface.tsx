@@ -3,6 +3,7 @@ import { useEPGStore } from '../../store/epgStore';
 import { fetchEPGData } from '../../services/epgService';
 import Loading from '../ui/Loading';
 import Error from '../ui/Error';
+import VideoPlayer from '../video/VideoPlayer';
 
 const DatePicker = lazy(function() {
   return import('./DatePicker').then(function(module) {
@@ -60,24 +61,31 @@ export default function TVInterface() {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-t from-gray-600 to-black text-white overflow-hidden">
-      <div className="h-full flex">
+    <div className="h-screen bg-gradient-to-t from-gray-600 to-black text-white overflow-hidden relative">
+      {/* Background Video Player */}
+      <VideoPlayer
+        streamUrl="https://bitmovin-a.akamaihd.net/content/art-of-motion_drm/mpds/11331.mpd"
+        licenseServer="https://cwip-shaka-proxy.appspot.com/no_auth"
+      />
+      
+      {/* UI Content */}
+      <div className="h-full flex relative z-10">
         {/* Date Picker Column */}
-        <div className="w-64 border-r border-gray-700 bg-gradient-to-t from-gray-600 to-black">
+        <div className="w-64 border-r border-gray-700 bg-gradient-to-t from-gray-600/30 to-black/50">
           <Suspense fallback={<Loading message="Loading date picker..." size="sm" />}>
             <DatePicker />
           </Suspense>
         </div>
 
         {/* Channel List Column */}
-        <div className="w-80 border-r border-gray-700 bg-gradient-to-t from-gray-600 to-black">
+        <div className="w-80 border-r border-gray-700 bg-gradient-to-t from-gray-600/30 to-black/50">
           <Suspense fallback={<Loading message="Loading channels..." size="sm" />}>
             <ChannelList />
           </Suspense>
         </div>
 
         {/* EPG List Column */}
-        <div className="flex-1 bg-gradient-to-t from-gray-600 to-black">
+        <div className="flex-1 bg-gradient-to-t from-gray-600/30 to-black/50">
           <Suspense fallback={<Loading message="Loading programs..." size="sm" />}>
             <EPGList />
           </Suspense>
