@@ -8,6 +8,7 @@ module.exports = {
     filename: 'bundle.js',
     clean: true,
   },
+  target: ['web', 'es5'],
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
   },

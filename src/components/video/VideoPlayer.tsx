@@ -9,7 +9,11 @@ interface VideoPlayerProps {
 
 export default function VideoPlayer({ streamUrl, licenseServer }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<shaka.Player | null>(null);
+  const lastProgressRef = useRef<number>(0);
+  const stallIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryCountRef = useRef<number>(0);
 
   useEffect(function() {
     if (!videoRef.current) {
@@ -56,6 +60,68 @@ export default function VideoPlayer({ streamUrl, licenseServer }: VideoPlayerPro
         });
       }
 
+      const scheduleRecovery = function(reason: string) {
+        if (retryTimerRef.current) {
+          return;
+        }
+        const attempt = retryCountRef.current + 1;
+        const delay = Math.min(3000 * Math.pow(2, retryCountRef.current), 30000); // exp backoff cap 30s
+        if (attempt > 5) {
+          console.warn('[VideoPlayer] Recovery stopped after max attempts. Reason:', reason);
+          // give up for this load; leave player idle
+          return;
+        }
+        console.warn('[VideoPlayer] Scheduling recovery', { reason: reason, attempt: attempt, delay: delay });
+        retryTimerRef.current = setTimeout(function() {
+          retryTimerRef.current = null;
+          retryCountRef.current = attempt;
+          if (!playerRef.current) {
+            return;
+          }
+          playerRef.current.load(streamUrl).catch(function() {
+            console.error('[VideoPlayer] Recovery load failed', { attempt: attempt, reason: reason });
+          });
+        }, delay);
+      };
+
+      const attachWatchdog = function() {
+        lastProgressRef.current = Date.now();
+        const onTimeUpdate = function() {
+          lastProgressRef.current = Date.now();
+        };
+        videoRef.current?.addEventListener('timeupdate', onTimeUpdate);
+
+        stallIntervalRef.current = setInterval(function() {
+          const videoEl = videoRef.current;
+          if (!videoEl) {
+            return;
+          }
+          const isPlaying = !videoEl.paused && !videoEl.ended && videoEl.readyState >= 2;
+          const stalled = Date.now() - lastProgressRef.current > 8000;
+          if (isPlaying && stalled) {
+            console.warn('[VideoPlayer] Detected stall, attempting recovery');
+            scheduleRecovery('stall');
+            videoEl.play().catch(function() {
+            });
+          }
+        }, 4000);
+
+        return function() {
+          if (stallIntervalRef.current) {
+            clearInterval(stallIntervalRef.current);
+            stallIntervalRef.current = null;
+          }
+          videoRef.current?.removeEventListener('timeupdate', onTimeUpdate);
+        };
+      };
+
+      const detachWatchdog = attachWatchdog();
+
+      player.addEventListener('error', function() {
+        console.error('[VideoPlayer] Shaka error event');
+        scheduleRecovery('shaka-error');
+      });
+
       player
         .load(streamUrl)
         .then(function() {
@@ -64,12 +130,27 @@ export default function VideoPlayer({ streamUrl, licenseServer }: VideoPlayerPro
           }
           videoRef.current.play().catch(function() {
           });
+          lastProgressRef.current = Date.now();
+          retryCountRef.current = 0; // reset on success
+          console.info('[VideoPlayer] Stream load success, retries reset');
         })
         .catch(function() {
+          console.error('[VideoPlayer] Initial load failed');
         });
 
       return function() {
         isMounted = false;
+        if (retryTimerRef.current) {
+          clearTimeout(retryTimerRef.current);
+          retryTimerRef.current = null;
+        }
+        if (stallIntervalRef.current) {
+          clearInterval(stallIntervalRef.current);
+          stallIntervalRef.current = null;
+        }
+        if (detachWatchdog) {
+          detachWatchdog();
+        }
         if (playerRef.current) {
           playerRef.current.destroy().catch(function() {
           });
