@@ -9,8 +9,20 @@ export default function EPGList() {
   const selectedDate = useEPGStore(function(state) {
     return state.selectedDate;
   });
+  const selectedProgramId = useEPGStore(function(state) {
+    return state.selectedProgramId;
+  });
   const getProgramsForChannelAndDate = useEPGStore(function(state) {
     return state.getProgramsForChannelAndDate;
+  });
+  const channelStreams = useEPGStore(function(state) {
+    return state.channelStreams;
+  });
+  const setSelectedProgramId = useEPGStore(function(state) {
+    return state.setSelectedProgramId;
+  });
+  const setActiveStream = useEPGStore(function(state) {
+    return state.setActiveStream;
   });
 
   const [currentTime, setCurrentTime] = useState(function() {
@@ -83,6 +95,14 @@ export default function EPGList() {
     });
   }, []);
 
+  const handleProgramSelect = useCallback(function(programId: string) {
+    setSelectedProgramId(programId);
+    const stream = selectedChannel ? channelStreams[selectedChannel] : null;
+    if (stream) {
+      setActiveStream(stream);
+    }
+  }, [setSelectedProgramId, channelStreams, selectedChannel, setActiveStream]);
+
   const formattedTimes = useMemo(function() {
     const formatted: Record<string, { start: string; stop: string }> = {};
     programs.forEach(function(program) {
@@ -124,18 +144,23 @@ export default function EPGList() {
             const status = getProgramStatus(program);
             const isPast = status === 'past';
             const isCurrent = status === 'current';
+            const isSelected = selectedProgramId === program.id;
 
             return (
               <div
                 key={program.id}
                 ref={isCurrent ? currentProgramRef : null}
                 className={`
-                  rounded-lg p-4 transition-colors
+                  rounded-lg p-4 transition-colors cursor-pointer border
                   ${isPast
                     ? 'bg-gray-800/50 opacity-60'
                     : 'bg-gray-800 hover:bg-gray-700'
                   }
+                  ${isSelected ? 'border-blue-500' : 'border-transparent'}
                 `}
+                onClick={function() {
+                  handleProgramSelect(program.id);
+                }}
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2 flex-1">

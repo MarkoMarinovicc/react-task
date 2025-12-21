@@ -1,6 +1,22 @@
 import { api } from '../api/apiFetch';
 import { parseEPGXML } from '../utils/xmlParser';
 import { useEPGStore } from '../store/epgStore';
+import { STREAM_SOURCES, StreamSource } from '../config/streams';
+
+function assignStreamsToChannels<T extends { id: string }>(
+  items: T[],
+  streams: StreamSource[]
+): Record<string, StreamSource> {
+  const mapping: Record<string, StreamSource> = {};
+  if (streams.length === 0) {
+    return mapping;
+  }
+  items.forEach(function(item) {
+    const randomStream = streams[Math.floor(Math.random() * streams.length)];
+    mapping[item.id] = randomStream;
+  });
+  return mapping;
+}
 
 export async function fetchEPGData() {
   const store = useEPGStore.getState();
@@ -19,6 +35,10 @@ export async function fetchEPGData() {
     store.setChannels(parsed.channels);
     store.setPrograms(parsed.programs);
     store.setAvailableDates(parsed.dates);
+    store.setStreams(STREAM_SOURCES);
+
+    const channelStreams = assignStreamsToChannels(parsed.channels, STREAM_SOURCES);
+    store.setChannelStreams(channelStreams);
 
     if (parsed.channels.length > 0 && !store.selectedChannel) {
       store.setSelectedDate(parsed.dates[0]);

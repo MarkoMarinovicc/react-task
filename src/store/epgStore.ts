@@ -16,32 +16,51 @@ export interface Program {
   category?: string;
 }
 
+export interface StreamSource {
+  id: string;
+  name: string;
+  url: string;
+  licenseServer?: string;
+}
+
 export interface EPGState {
   channels: Channel[];
   programs: Program[];
+  streams: StreamSource[];
+  channelStreams: Record<string, StreamSource>;
   selectedChannel: string | null;
   selectedDate: string | null;
+  selectedProgramId: string | null;
   availableDates: string[];
   loading: boolean;
   error: string | null;
   setChannels: (channels: Channel[]) => void;
   setPrograms: (programs: Program[]) => void;
+  setStreams: (streams: StreamSource[]) => void;
+  setChannelStreams: (channelStreams: Record<string, StreamSource>) => void;
   setSelectedChannel: (channelId: string | null) => void;
   setSelectedDate: (date: string | null) => void;
+  setSelectedProgramId: (programId: string | null) => void;
   setAvailableDates: (dates: string[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setActiveStream: (stream: StreamSource | null) => void;
+  activeStream: StreamSource | null;
   getProgramsForChannelAndDate: (channelId: string, date: string) => Program[];
 }
 
 export const useEPGStore = create<EPGState>((set, get) => ({
   channels: [],
   programs: [],
+  streams: [],
+  channelStreams: {},
   selectedChannel: null,
   selectedDate: null,
+  selectedProgramId: null,
   availableDates: [],
   loading: false,
   error: null,
+  activeStream: null,
 
   setChannels: function(channels: Channel[]) {
     set({ channels });
@@ -51,12 +70,24 @@ export const useEPGStore = create<EPGState>((set, get) => ({
     set({ programs });
   },
 
+  setStreams: function(streams: StreamSource[]) {
+    set({ streams });
+  },
+
+  setChannelStreams: function(channelStreams: Record<string, StreamSource>) {
+    set({ channelStreams });
+  },
+
   setSelectedChannel: function(channelId: string | null) {
     set({ selectedChannel: channelId });
   },
 
   setSelectedDate: function(date: string | null) {
     set({ selectedDate: date });
+  },
+
+  setSelectedProgramId: function(programId: string | null) {
+    set({ selectedProgramId: programId });
   },
 
   setAvailableDates: function(dates: string[]) {
@@ -69,6 +100,10 @@ export const useEPGStore = create<EPGState>((set, get) => ({
 
   setError: function(error: string | null) {
     set({ error });
+  },
+
+  setActiveStream: function(stream: StreamSource | null) {
+    set({ activeStream: stream });
   },
 
   getProgramsForChannelAndDate: function(channelId: string, date: string) {

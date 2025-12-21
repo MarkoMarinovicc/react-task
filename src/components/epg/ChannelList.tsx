@@ -8,13 +8,27 @@ export default function ChannelList() {
   const selectedChannel = useEPGStore(function(state) {
     return state.selectedChannel;
   });
+  const channelStreams = useEPGStore(function(state) {
+    return state.channelStreams;
+  });
   const setSelectedChannel = useEPGStore(function(state) {
     return state.setSelectedChannel;
+  });
+  const setSelectedProgramId = useEPGStore(function(state) {
+    return state.setSelectedProgramId;
+  });
+  const setActiveStream = useEPGStore(function(state) {
+    return state.setActiveStream;
   });
 
   const handleChannelClick = useCallback(function(channelId: string) {
     setSelectedChannel(channelId);
-  }, [setSelectedChannel]);
+    setSelectedProgramId(null);
+    const assignedStream = channelStreams[channelId];
+    if (assignedStream) {
+      setActiveStream(assignedStream);
+    }
+  }, [setSelectedChannel, setSelectedProgramId, channelStreams, setActiveStream]);
 
   const handleImageError = useCallback(function(e: React.SyntheticEvent<HTMLImageElement>) {
     (e.target as HTMLImageElement).style.display = 'none';

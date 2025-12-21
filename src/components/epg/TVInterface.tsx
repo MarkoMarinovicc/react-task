@@ -30,6 +30,14 @@ export default function TVInterface() {
   const error = useEPGStore(function(state) {
     return state.error;
   });
+  const activeStream = useEPGStore(function(state) {
+    return state.activeStream;
+  });
+
+  const defaultStream = {
+    url: 'https://bitmovin-a.akamaihd.net/content/art-of-motion_drm/mpds/11331.mpd',
+    licenseServer: 'https://cwip-shaka-proxy.appspot.com/no_auth',
+  };
 
   const handleFetchEPGData = useCallback(function() {
     fetchEPGData();
@@ -64,8 +72,8 @@ export default function TVInterface() {
     <div className="h-screen bg-gradient-to-t from-gray-600 to-black text-white overflow-hidden relative">
       {/* Background Video Player */}
       <VideoPlayer
-        streamUrl="https://bitmovin-a.akamaihd.net/content/art-of-motion_drm/mpds/11331.mpd"
-        licenseServer="https://cwip-shaka-proxy.appspot.com/no_auth"
+        streamUrl={activeStream?.url || defaultStream.url}
+        licenseServer={activeStream?.licenseServer || defaultStream.licenseServer}
       />
       
       {/* UI Content */}

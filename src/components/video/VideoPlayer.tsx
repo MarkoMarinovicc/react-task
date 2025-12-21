@@ -4,7 +4,7 @@ import shaka from 'shaka-player/dist/shaka-player.compiled';
 
 interface VideoPlayerProps {
   streamUrl: string;
-  licenseServer: string;
+  licenseServer?: string;
 }
 
 export default function VideoPlayer({ streamUrl, licenseServer }: VideoPlayerProps) {
@@ -13,6 +13,14 @@ export default function VideoPlayer({ streamUrl, licenseServer }: VideoPlayerPro
 
   useEffect(function() {
     if (!videoRef.current) {
+      return;
+    }
+    if (!streamUrl) {
+      if (playerRef.current) {
+        playerRef.current.destroy().catch(function() {
+        });
+        playerRef.current = null;
+      }
       return;
     }
 
@@ -32,16 +40,21 @@ export default function VideoPlayer({ streamUrl, licenseServer }: VideoPlayerPro
       playerRef.current = player;
 
       player.configure({
-        drm: {
-          servers: {
-            'com.widevine.alpha': licenseServer,
-          },
-        },
         streaming: {
           bufferingGoal: 30,
           rebufferingGoal: 2,
         },
       });
+
+      if (licenseServer) {
+        player.configure({
+          drm: {
+            servers: {
+              'com.widevine.alpha': licenseServer,
+            },
+          },
+        });
+      }
 
       player
         .load(streamUrl)
